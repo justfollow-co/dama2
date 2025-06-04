@@ -888,19 +888,19 @@ const PickupProcess = ({ booking, onComplete, onBack }) => {
   };
 
   React.useEffect(() => {
-    if (canvasRef.current) {
+    if (step === 5 && canvasRef.current) {
       const canvas = canvasRef.current;
       canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
       canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
       canvas.addEventListener('touchend', handleTouchEnd, { passive: false });
-      
+
       return () => {
         canvas.removeEventListener('touchstart', handleTouchStart);
         canvas.removeEventListener('touchmove', handleTouchMove);
         canvas.removeEventListener('touchend', handleTouchEnd);
       };
     }
-  }, []);
+  }, [step]);
 
   return (
     <div className="bg-white rounded-lg shadow-lg p-6 mt-6">
