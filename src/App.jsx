@@ -888,6 +888,69 @@ const PickupProcess = ({ booking, onComplete, onBack }) => {
     }
   };
 
+  // Fonction pour sauvegarder l'état dans localStorage
+  const saveCheckinState = () => {
+    const checkinState = {
+      step,
+      extPhotos,
+      intPhotos,
+      location,
+      signature,
+      driverLicensePhotos,
+      idCardPhotos,
+      clientInfo
+    };
+    localStorage.setItem('damaloc-checkin', JSON.stringify(checkinState));
+  };
+
+  // Fonction pour restaurer l'état depuis localStorage
+  const restoreCheckinState = () => {
+    const savedState = localStorage.getItem('damaloc-checkin');
+    if (savedState) {
+      const {
+        step,
+        extPhotos,
+        intPhotos,
+        location,
+        signature,
+        driverLicensePhotos,
+        idCardPhotos,
+        clientInfo
+      } = JSON.parse(savedState);
+      setStep(step);
+      setExtPhotos(extPhotos);
+      setIntPhotos(intPhotos);
+      setLocation(location);
+      setSignature(signature);
+      setDriverLicensePhotos(driverLicensePhotos);
+      setIdCardPhotos(idCardPhotos);
+      setClientInfo(clientInfo);
+    }
+  };
+
+  // Sauvegarde automatique à chaque mise à jour de l'état
+  React.useEffect(() => {
+    saveCheckinState();
+  }, [step, extPhotos, intPhotos, location, signature, driverLicensePhotos, idCardPhotos, clientInfo]);
+
+  // Restauration de l'état au montage du composant
+  React.useEffect(() => {
+    restoreCheckinState();
+  }, []);
+
+  // Ajout du bouton de réinitialisation
+  const resetCheckinState = () => {
+    localStorage.removeItem('damaloc-checkin');
+    setStep(1);
+    setExtPhotos([]);
+    setIntPhotos([]);
+    setLocation(null);
+    setSignature('');
+    setDriverLicensePhotos([]);
+    setIdCardPhotos([]);
+    setClientInfo({ address: '', phone: '', licenseNumber: '' });
+  };
+
   React.useEffect(() => {
     if (step === 5 && canvasRef.current) {
       const canvas = canvasRef.current;
@@ -911,6 +974,9 @@ const PickupProcess = ({ booking, onComplete, onBack }) => {
           <div className="flex gap-2">
             <button onClick={onBack} className="text-gray-600 hover:text-gray-800 text-sm">
               ← Retour
+            </button>
+            <button onClick={resetCheckinState} className="text-red-600 hover:text-red-800 text-sm">
+              Réinitialiser le check-in
             </button>
             <span className="text-sm text-gray-500">Étape {step} sur 5</span>
           </div>
@@ -947,7 +1013,7 @@ const PickupProcess = ({ booking, onComplete, onBack }) => {
   </>
 ) : (
   <p className="text-red-600 text-sm text-center">
-    Erreur : guide introuvable à l’index {currentPhotoGuide}
+    Erreur : guide introuvable à l'index {currentPhotoGuide}
   </p>
 )}
                 <p className="text-xs text-gray-600 mt-1">Photo {currentPhotoGuide + 1} sur {photoGuides.length}</p>
