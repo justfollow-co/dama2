@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { Camera, MapPin, FileText, AlertTriangle, Mail, Car, CheckCircle, Info, Clock, Globe, Users, Plus, Upload, Search, Eye, Settings, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Camera, MapPin, FileText, AlertTriangle, Mail, Car, CheckCircle, Info, Clock, Globe, Users, Plus, Upload, Search, Eye, Settings, X, ChevronLeft, ChevronRight, Home, LogOut, Truck } from 'lucide-react';
 
 const App = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [currentView, setCurrentView] = useState('dashboard');
+  const [currentAdminView, setCurrentAdminView] = useState('dashboard');
   const [userEmail, setUserEmail] = useState('');
   
   const [reservations, setReservations] = useState([
@@ -74,6 +74,24 @@ const App = () => {
     longitude: null
   });
 
+  // Ajout de l'état pour les véhicules
+  const [vehicles, setVehicles] = useState([
+    {
+      id: '1',
+      brand: 'Peugeot',
+      model: '208',
+      plate: 'AB-123-CD',
+      photo: ''
+    },
+    {
+      id: '2',
+      brand: 'Renault',
+      model: 'Clio',
+      plate: 'EF-456-GH',
+      photo: ''
+    }
+  ]);
+
   const handleLogin = (email, adminMode = false) => {
     setUserEmail(email);
     setIsAdmin(adminMode);
@@ -86,14 +104,14 @@ const App = () => {
       }
     }
     setIsLoggedIn(true);
-    setCurrentView(adminMode ? 'admin-dashboard' : 'dashboard');
+    setCurrentAdminView(adminMode ? 'admin-dashboard' : 'dashboard');
   };
 
   const handleLogout = () => {
     setIsLoggedIn(false);
     setIsAdmin(false);
     setUserEmail('');
-    setCurrentView('dashboard');
+    setCurrentAdminView('dashboard');
   };
 
   if (!isLoggedIn) {
@@ -116,53 +134,46 @@ const App = () => {
 
   if (isAdmin) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <header className="bg-red-600 text-white p-4 shadow-lg">
-          <div className="max-w-6xl mx-auto flex items-center justify-between">
+      <div className="flex min-h-screen">
+        <aside className="w-64 bg-gray-800 text-white flex flex-col">
+          <div className="p-4 flex items-center justify-center bg-gray-900">
             <h1 className="text-2xl font-bold flex items-center gap-2">
               <Settings className="w-6 h-6" />
-              DAMALOC - Administration
+              DAMALOC
             </h1>
-            <div className="flex items-center gap-4">
-              <span className="text-sm">Admin: {userEmail}</span>
-              <button 
-                onClick={handleLogout}
-                className="text-sm hover:text-red-200 transition-colors bg-red-700 px-3 py-1 rounded"
-              >
-                Déconnexion
-              </button>
-            </div>
           </div>
-        </header>
-        <main className="max-w-6xl mx-auto p-4">
-          {currentView === 'admin-dashboard' && (
-            <AdminDashboard 
-              reservations={reservations}
-              onViewReservation={(id) => {
-                const reservation = reservations.find(r => r.id === id);
-                if (reservation) {
-                  setBooking(reservation);
-                  setCurrentView('admin-details');
-                }
-              }}
-              onAddReservation={() => setCurrentView('admin-add')}
-            />
-          )}
-          {currentView === 'admin-details' && (
-            <AdminDetails 
-              booking={booking}
-              onBack={() => setCurrentView('admin-dashboard')}
-            />
-          )}
-          {currentView === 'admin-add' && (
-            <AdminAdd 
-              onSave={(newReservation) => {
-                setReservations(prev => [...prev, { ...newReservation, id: Date.now().toString() }]);
-                setCurrentView('admin-dashboard');
-              }}
-              onBack={() => setCurrentView('admin-dashboard')}
-            />
-          )}
+          <nav className="flex-1 p-4 space-y-2">
+            <button onClick={() => setCurrentAdminView('dashboard')} className={`flex items-center gap-2 p-2 rounded hover:bg-gray-700 transition ${currentAdminView === 'dashboard' ? 'bg-gray-700' : ''}`}>
+              <Home className="w-5 h-5" />
+              Dashboard
+            </button>
+            <button onClick={() => setCurrentAdminView('vehicles')} className={`flex items-center gap-2 p-2 rounded hover:bg-gray-700 transition ${currentAdminView === 'vehicles' ? 'bg-gray-700' : ''}`}>
+              <Truck className="w-5 h-5" />
+              Gestion des véhicules
+            </button>
+            <button onClick={() => setCurrentAdminView('add-reservation')} className={`flex items-center gap-2 p-2 rounded hover:bg-gray-700 transition ${currentAdminView === 'add-reservation' ? 'bg-gray-700' : ''}`}>
+              <Plus className="w-5 h-5" />
+              Nouvelle réservation
+            </button>
+            <button onClick={handleLogout} className="flex items-center gap-2 p-2 rounded hover:bg-gray-700 transition">
+              <LogOut className="w-5 h-5" />
+              Déconnexion
+            </button>
+          </nav>
+        </aside>
+        <main className="flex-1 p-6 bg-gray-100">
+          {currentAdminView === 'dashboard' && <AdminDashboard reservations={reservations} onViewReservation={(id) => {
+            const reservation = reservations.find(r => r.id === id);
+            if (reservation) {
+              setBooking(reservation);
+              setCurrentAdminView('admin-details');
+            }
+          }} onAddReservation={() => setCurrentAdminView('admin-add')} />}
+          {currentAdminView === 'vehicles' && <AdminVehicles vehicles={vehicles} onAddVehicle={handleAddVehicle} onEditVehicle={handleEditVehicle} onDeleteVehicle={handleDeleteVehicle} />}
+          {currentAdminView === 'add-reservation' && <AdminAddReservation onSave={(newReservation) => {
+            setReservations(prev => [...prev, { ...newReservation, id: Date.now().toString() }]);
+            setCurrentAdminView('dashboard');
+          }} onBack={() => setCurrentAdminView('dashboard')} />}
         </main>
       </div>
     );
@@ -188,34 +199,34 @@ const App = () => {
         </div>
       </header>
       <main className="max-w-4xl mx-auto p-4">
-        {currentView === 'dashboard' && (
+        {currentAdminView === 'dashboard' && (
           <DashboardView 
             booking={booking}
-            onStartPickup={() => setCurrentView('pickup')}
-            onViewContract={() => setCurrentView('contract')}
-            onReportIncident={() => setCurrentView('incident')}
+            onStartPickup={() => setCurrentAdminView('pickup')}
+            onViewContract={() => setCurrentAdminView('contract')}
+            onReportIncident={() => setCurrentAdminView('incident')}
           />
         )}
-        {currentView === 'pickup' && (
+        {currentAdminView === 'pickup' && (
           <PickupProcess 
             booking={booking}
             onComplete={(data) => {
               setBooking(prev => ({...prev, ...data, status: 'completed'}));
-              setCurrentView('dashboard');
+              setCurrentAdminView('dashboard');
             }}
-            onBack={() => setCurrentView('dashboard')}
+            onBack={() => setCurrentAdminView('dashboard')}
           />
         )}
-        {currentView === 'contract' && (
-          <ContractView booking={booking} onBack={() => setCurrentView('dashboard')} />
+        {currentAdminView === 'contract' && (
+          <ContractView booking={booking} onBack={() => setCurrentAdminView('dashboard')} />
         )}
-        {currentView === 'incident' && (
+        {currentAdminView === 'incident' && (
           <IncidentForm 
             onComplete={() => {
               setBooking(prev => ({...prev, status: 'incident'}));
-              setCurrentView('dashboard');
+              setCurrentAdminView('dashboard');
             }}
-            onBack={() => setCurrentView('dashboard')}
+            onBack={() => setCurrentAdminView('dashboard')}
           />
         )}
       </main>
@@ -2123,6 +2134,179 @@ const AdminAdd = ({ onSave, onBack }) => {
       </form>
     </div>
   );
+};
+
+// Composant pour gérer les véhicules
+const VehicleManager = ({ vehicles, onAddVehicle, onEditVehicle, onDeleteVehicle }) => {
+  const [newVehicle, setNewVehicle] = useState({ brand: '', model: '', plate: '', photo: '' });
+  const [editingVehicle, setEditingVehicle] = useState(null);
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setNewVehicle(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handlePhotoChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setNewVehicle(prev => ({ ...prev, photo: event.target.result }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleAddVehicle = () => {
+    if (!newVehicle.brand || !newVehicle.model || !newVehicle.plate) {
+      alert('Tous les champs sont obligatoires');
+      return;
+    }
+    onAddVehicle({ ...newVehicle, id: Date.now().toString() });
+    setNewVehicle({ brand: '', model: '', plate: '', photo: '' });
+  };
+
+  const handleEditVehicle = (vehicle) => {
+    setEditingVehicle(vehicle);
+    setNewVehicle(vehicle);
+  };
+
+  const handleUpdateVehicle = () => {
+    if (!newVehicle.brand || !newVehicle.model || !newVehicle.plate) {
+      alert('Tous les champs sont obligatoires');
+      return;
+    }
+    onEditVehicle(newVehicle);
+    setEditingVehicle(null);
+    setNewVehicle({ brand: '', model: '', plate: '', photo: '' });
+  };
+
+  const handleDeleteVehicle = (id) => {
+    if (window.confirm('Êtes-vous sûr de vouloir supprimer ce véhicule ?')) {
+      onDeleteVehicle(id);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <h2 className="text-2xl font-bold mb-4">Gestion des véhicules</h2>
+      <div className="bg-white rounded-lg shadow p-6">
+        <h3 className="font-semibold mb-3">{editingVehicle ? 'Modifier le véhicule' : 'Ajouter un nouveau véhicule'}</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <input
+            type="text"
+            name="brand"
+            value={newVehicle.brand}
+            onChange={handleInputChange}
+            placeholder="Marque"
+            className="border border-gray-300 rounded-lg px-3 py-2"
+          />
+          <input
+            type="text"
+            name="model"
+            value={newVehicle.model}
+            onChange={handleInputChange}
+            placeholder="Modèle"
+            className="border border-gray-300 rounded-lg px-3 py-2"
+          />
+          <input
+            type="text"
+            name="plate"
+            value={newVehicle.plate}
+            onChange={handleInputChange}
+            placeholder="Plaque"
+            className="border border-gray-300 rounded-lg px-3 py-2"
+          />
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handlePhotoChange}
+            className="border border-gray-300 rounded-lg px-3 py-2"
+          />
+          {newVehicle.photo && <img src={newVehicle.photo} alt="Aperçu" className="w-32 h-32 object-cover rounded-lg" />}
+        </div>
+        <div className="mt-4">
+          {editingVehicle ? (
+            <button
+              onClick={handleUpdateVehicle}
+              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+            >
+              Mettre à jour
+            </button>
+          ) : (
+            <button
+              onClick={handleAddVehicle}
+              className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700"
+            >
+              Ajouter
+            </button>
+          )}
+        </div>
+      </div>
+
+      <div className="bg-white rounded-lg shadow p-6">
+        <h3 className="font-semibold mb-3">Liste des véhicules</h3>
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Marque</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Modèle</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Plaque</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Photo</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {vehicles.map(vehicle => (
+                <tr key={vehicle.id} className="hover:bg-gray-50">
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm font-medium text-gray-900">{vehicle.brand}</div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm font-medium text-gray-900">{vehicle.model}</div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm font-medium text-gray-900">{vehicle.plate}</div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {vehicle.photo ? <img src={vehicle.photo} alt="Véhicule" className="w-16 h-16 object-cover rounded-lg" /> : 'Aucune photo'}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
+                    <button
+                      onClick={() => handleEditVehicle(vehicle)}
+                      className="text-blue-600 hover:text-blue-900 mr-2"
+                    >
+                      Modifier
+                    </button>
+                    <button
+                      onClick={() => handleDeleteVehicle(vehicle.id)}
+                      className="text-red-600 hover:text-red-900"
+                    >
+                      Supprimer
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Ajout des fonctions de gestion des véhicules dans le composant principal
+const handleAddVehicle = (vehicle) => {
+  setVehicles(prev => [...prev, vehicle]);
+};
+
+const handleEditVehicle = (updatedVehicle) => {
+  setVehicles(prev => prev.map(v => v.id === updatedVehicle.id ? updatedVehicle : v));
+};
+
+const handleDeleteVehicle = (id) => {
+  setVehicles(prev => prev.filter(v => v.id !== id));
 };
 
 export default App;
