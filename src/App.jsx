@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Camera, MapPin, FileText, AlertTriangle, Mail, Car, CheckCircle, Info, Clock, Globe, Users, Plus, Upload, Search, Eye, Settings, X, ChevronLeft, ChevronRight, Home, LogOut, Truck } from 'lucide-react';
 import AdminVehicles from './components/AdminVehicles.jsx';
 import AdminAddReservation from './components/AdminAddReservation.jsx';
+import AdminReservations from './components/AdminReservations';
 
 
 const App = () => {
@@ -183,6 +184,7 @@ const App = () => {
     onBack={() => setCurrentAdminView('dashboard')}
   />
 )}
+ {currentAdminView === 'reservations' && <AdminReservations />}
         </main>
       </div>
     );
