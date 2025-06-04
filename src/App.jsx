@@ -433,8 +433,8 @@ const PickupProcess = ({ booking, onComplete, onBack }) => {
   const [code, setCode] = useState('');
   const [extDamageNotes, setExtDamageNotes] = useState('');
   const [currentPhotoGuide, setCurrentPhotoGuide] = useState(0);
-  const [driverLicense, setDriverLicense] = useState(null);
-  const [idCard, setIdCard] = useState(null);
+  const [driverLicensePhotos, setDriverLicensePhotos] = useState([]);
+  const [idCardPhotos, setIdCardPhotos] = useState([]);
   const [clientInfo, setClientInfo] = useState({
     address: '',
     phone: '',
@@ -747,21 +747,21 @@ const PickupProcess = ({ booking, onComplete, onBack }) => {
   };
 
   const handleDocumentCapture = (type) => (e) => {
-    const file = e.target.files?.[0];
-    if (file) {
+    const files = Array.from(e.target.files || []);
+    files.forEach(file => {
       const reader = new FileReader();
       reader.onload = (event) => {
         const base64 = event.target?.result;
         if (base64) {
           if (type === 'license') {
-            setDriverLicense(base64);
+            setDriverLicensePhotos(prev => [...prev, base64]);
           } else {
-            setIdCard(base64);
+            setIdCardPhotos(prev => [...prev, base64]);
           }
         }
       };
       reader.readAsDataURL(file);
-    }
+    });
   };
 
   const getLocation = () => {
@@ -875,12 +875,13 @@ const PickupProcess = ({ booking, onComplete, onBack }) => {
         signature,
         extDamageNotes,
         notes: extDamageNotes,
-        driverLicense,
-        idCard,
+        driverLicensePhotos,
+        idCardPhotos,
         clientAddress: clientInfo.address,
         clientPhone: clientInfo.phone,
-        licenseNumber: clientInfo.licenseNumber
+        licenseNumber: clientInfo.licenseNumber, 
       });
+      
       alert('Check-in terminé avec succès !');
     } else {
       alert('Code incorrect. Utilisez "1234"');
@@ -935,9 +936,20 @@ const PickupProcess = ({ booking, onComplete, onBack }) => {
               </button>
               
               <div className="text-center">
-                <div className="text-3xl mb-2">{photoGuides[currentPhotoGuide].icon}</div>
-                <h4 className="font-bold text-lg text-blue-800">{photoGuides[currentPhotoGuide].title}</h4>
-                <p className="text-sm text-blue-600">{photoGuides[currentPhotoGuide].description}</p>
+              {photoGuides[currentPhotoGuide] ? (
+  <>
+    <div className="text-3xl mb-2">{photoGuides[currentPhotoGuide].icon}</div>
+    <h4 className="font-bold text-lg text-blue-800">{photoGuides[currentPhotoGuide].title}</h4>
+    <p className="text-sm text-blue-600">{photoGuides[currentPhotoGuide].description}</p>
+    <p className="text-xs text-gray-600 mt-1">
+      Photo {currentPhotoGuide + 1} sur {photoGuides.length}
+    </p>
+  </>
+) : (
+  <p className="text-red-600 text-sm text-center">
+    Erreur : guide introuvable à l’index {currentPhotoGuide}
+  </p>
+)}
                 <p className="text-xs text-gray-600 mt-1">Photo {currentPhotoGuide + 1} sur {photoGuides.length}</p>
               </div>
               
@@ -1202,73 +1214,88 @@ const PickupProcess = ({ booking, onComplete, onBack }) => {
 
             {/* Permis de conduire */}
             <div>
-              <label className="block text-sm font-semibold mb-3 text-gray-700">
-                Permis de conduire (recto-verso)
-              </label>
-              <input
-                type="file"
-                accept="image/*"
-                capture="environment"
-                onChange={handleDocumentCapture('license')}
-                className="hidden"
-                id="driver-license"
-              />
-              <label
-                htmlFor="driver-license"
-                className="w-full border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition-all block"
-              >
-                {!driverLicense ? (
-                  <>
-                    <FileText className="w-12 h-12 mx-auto mb-3 text-gray-400" />
-                    <p className="text-gray-700 font-medium">Prendre en photo votre permis</p>
-                    <p className="text-sm text-gray-500 mt-1">Format accepté : JPG, PNG</p>
-                  </>
-                ) : (
-                  <div className="space-y-3">
-                    <img src={driverLicense} alt="Permis" className="h-32 mx-auto rounded" />
-                    <p className="text-green-600 font-medium flex items-center justify-center gap-2">
-                      <CheckCircle className="w-5 h-5" />
-                      Permis téléchargé
-                    </p>
-                  </div>
-                )}
-              </label>
-            </div>
+  <label className="block text-sm font-semibold mb-3 text-gray-700">
+    Permis de conduire (recto et verso)
+  </label>
+
+  <input
+    type="file"
+    accept="image/*"
+    capture="environment"
+    onChange={handleDocumentCapture('license')}
+    className="hidden"
+    id="driver-license"
+    multiple
+  />
+
+  <label
+    htmlFor="driver-license"
+    className="w-full border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition-all block"
+  >
+    <FileText className="w-12 h-12 mx-auto mb-3 text-gray-400" />
+    <p className="text-gray-700 font-medium">Ajouter les photos du permis</p>
+    <p className="text-sm text-gray-500 mt-1">Ajoutez recto et verso (max 2 images)</p>
+  </label>
+
+  {driverLicensePhotos.length > 0 && (
+    <div className="grid grid-cols-2 gap-4 mt-4">
+      {driverLicensePhotos.map((photo, index) => (
+        <div key={index} className="relative group">
+          <img src={photo} alt={`Permis ${index + 1}`} className="rounded border w-full h-32 object-cover" />
+          <button
+            onClick={() => setDriverLicensePhotos(prev => prev.filter((_, i) => i !== index))}
+            className="absolute top-1 right-1 bg-red-600 text-white p-1 rounded-full text-xs"
+          >
+            ✕
+          </button>
+        </div>
+      ))}
+    </div>
+  )}
+</div>
 
             {/* Pièce d'identité */}
             <div>
-              <label className="block text-sm font-semibold mb-3 text-gray-700">
-                Pièce d'identité (carte d'identité ou passeport)
-              </label>
-              <input
-                type="file"
-                accept="image/*"
-                capture="environment"
-                onChange={handleDocumentCapture('id')}
-                className="hidden"
-                id="id-card"
-              />
-              <label
-                htmlFor="id-card"
-                className="w-full border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition-all block"
-              >
-                {!idCard ? (
-                  <>
-                    <FileText className="w-12 h-12 mx-auto mb-3 text-gray-400" />
-                    <p className="text-gray-700 font-medium">Prendre en photo votre pièce d'identité</p>
-                    <p className="text-sm text-gray-500 mt-1">Format accepté : JPG, PNG</p>
-                  </>
-                ) : (
-                  <div className="space-y-3">
-                    <img src={idCard} alt="Pièce d'identité" className="h-32 mx-auto rounded" />
-                    <p className="text-green-600 font-medium flex items-center justify-center gap-2">
-                      <CheckCircle className="w-5 h-5" />
-                      Pièce d'identité téléchargée
-                    </p>
-                  </div>
-                )}
-              </label>
-            </div>
+  <label className="block text-sm font-semibold mb-3 text-gray-700">
+    Pièce d'identité (recto et verso)
+  </label>
+
+  <input
+    type="file"
+    accept="image/*"
+    capture="environment"
+    onChange={handleDocumentCapture('id')}
+    className="hidden"
+    id="id-card"
+    multiple
+  />
+
+  <label
+    htmlFor="id-card"
+    className="w-full border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition-all block"
+  >
+    <FileText className="w-12 h-12 mx-auto mb-3 text-gray-400" />
+    <p className="text-gray-700 font-medium">Ajouter les photos de la pièce d'identité</p>
+    <p className="text-sm text-gray-500 mt-1">Ajoutez recto et verso (max 2 images)</p>
+  </label>
+
+  {idCardPhotos.length > 0 && (
+    <div className="grid grid-cols-2 gap-4 mt-4">
+      {idCardPhotos.map((photo, index) => (
+        <div key={index} className="relative group">
+          <img src={photo} alt={`ID ${index + 1}`} className="rounded border w-full h-32 object-cover" />
+          <button
+            onClick={() => setIdCardPhotos(prev => prev.filter((_, i) => i !== index))}
+            className="absolute top-1 right-1 bg-red-600 text-white p-1 rounded-full text-xs"
+          >
+            ✕
+          </button>
+        </div>
+      ))}
+    </div>
+  )}
+</div>
+
 
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
               <p className="text-blue-800 text-sm">
@@ -1276,12 +1303,25 @@ const PickupProcess = ({ booking, onComplete, onBack }) => {
               </p>
             </div>
 
+            {/* Message d'aide au-dessus du bouton */}
+            {(driverLicensePhotos.length < 2 || idCardPhotos.length < 2) && (
+              <p className="text-sm text-red-600 text-center mb-3">
+                ⚠️ Veuillez ajouter 2 photos pour le permis et 2 pour la pièce d'identité.
+              </p>
+            )}
+
             <button
               onClick={() => setStep(5)}
-              disabled={!driverLicense || !idCard || !clientInfo.address || !clientInfo.phone || !clientInfo.licenseNumber}
-              className="w-full bg-blue-600 text-white py-4 rounded-lg font-semibold hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-all"
+              disabled={driverLicensePhotos.length < 2 || idCardPhotos.length < 2}
+              className={`w-full py-4 rounded-lg font-semibold transition-all ${
+                driverLicensePhotos.length < 2 || idCardPhotos.length < 2
+                  ? 'bg-gray-400 cursor-not-allowed'
+                  : 'bg-blue-600 text-white hover:bg-blue-700'
+              }`}
             >
-              Continuer
+              {driverLicensePhotos.length < 2 || idCardPhotos.length < 2
+                ? `Ajoutez les documents manquants`
+                : `Continuer`}
             </button>
           </div>
         </div>
