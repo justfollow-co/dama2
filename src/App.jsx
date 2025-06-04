@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Camera, MapPin, FileText, AlertTriangle, Mail, Car, CheckCircle, Info, Clock, Globe, Users, Plus, Upload, Search, Eye, Settings, X, ChevronLeft, ChevronRight, Home, LogOut, Truck } from 'lucide-react';
 import AdminVehicles from './components/AdminVehicles.jsx';
 import AdminAddReservation from './components/AdminAddReservation.jsx';
-import AdminReservations from './components/AdminReservations';
+import AdminReservations from './components/AdminReservations.jsx';
 
 
 const App = () => {
@@ -158,6 +158,9 @@ const App = () => {
             <button onClick={() => setCurrentAdminView('add-reservation')} className={`flex items-center gap-2 p-2 rounded hover:bg-gray-700 transition ${currentAdminView === 'add-reservation' ? 'bg-gray-700' : ''}`}>
               <Plus className="w-5 h-5" />
               Nouvelle réservation
+            </button>
+            <button onClick={() => setCurrentAdminView('reservations')} className="flex items-center gap-2 p-2 rounded hover:bg-gray-700 transition ">
+             Voir les réservations
             </button>
             <button onClick={handleLogout} className="flex items-center gap-2 p-2 rounded hover:bg-gray-700 transition">
               <LogOut className="w-5 h-5" />
