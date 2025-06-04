@@ -2,15 +2,11 @@
 
 Application de gestion de location de véhicules avec système de check-in complet.
 
-## 🚀 Installation
+## Setup
 
 ```bash
-# Installer les dépendances
 npm install
-
-# Lancer l'application
 npm run dev
-```
 
 ## 🔐 Accès
 
