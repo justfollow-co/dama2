@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
 import { Camera, MapPin, FileText, AlertTriangle, Mail, Car, CheckCircle, Info, Clock, Globe, Users, Plus, Upload, Search, Eye, Settings, X, ChevronLeft, ChevronRight, Home, LogOut, Truck } from 'lucide-react';
+import AdminVehicles from './components/AdminVehicles.jsx';
+import AdminAddReservation from './components/AdminAddReservation.jsx';
+
 
 const App = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -168,12 +171,18 @@ const App = () => {
               setBooking(reservation);
               setCurrentAdminView('admin-details');
             }
-          }} onAddReservation={() => setCurrentAdminView('admin-add')} />}
+          }} onAddReservation={() => setCurrentAdminView('add-reservation')} />}
           {currentAdminView === 'vehicles' && <AdminVehicles vehicles={vehicles} onAddVehicle={handleAddVehicle} onEditVehicle={handleEditVehicle} onDeleteVehicle={handleDeleteVehicle} />}
-          {currentAdminView === 'add-reservation' && <AdminAddReservation onSave={(newReservation) => {
-            setReservations(prev => [...prev, { ...newReservation, id: Date.now().toString() }]);
-            setCurrentAdminView('dashboard');
-          }} onBack={() => setCurrentAdminView('dashboard')} />}
+          {currentAdminView === 'add-reservation' && (
+  <AdminAddReservation
+    vehicles={vehicles} // ✅ On passe les véhicules ici
+    onSave={(newReservation) => {
+      setReservations(prev => [...prev, { ...newReservation, id: Date.now().toString() }]);
+      setCurrentAdminView('dashboard');
+    }}
+    onBack={() => setCurrentAdminView('dashboard')}
+  />
+)}
         </main>
       </div>
     );
@@ -2302,9 +2311,10 @@ const handleAddVehicle = (vehicle) => {
 };
 
 const handleEditVehicle = (updatedVehicle) => {
-  setVehicles(prev => prev.map(v => v.id === updatedVehicle.id ? updatedVehicle : v));
+  setVehicles(prev =>
+    prev.map(vehicle => (vehicle.id === updatedVehicle.id ? updatedVehicle : vehicle))
+  );
 };
-
 const handleDeleteVehicle = (id) => {
   setVehicles(prev => prev.filter(v => v.id !== id));
 };
