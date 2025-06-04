@@ -1,4 +1,0 @@
-* text=auto
-*.sh text eol=lf
-git add .gitattributes
-git commit -m "Ajout de .gitattributes pour gérer les fins de ligne"
